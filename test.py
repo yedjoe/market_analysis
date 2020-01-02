@@ -1,20 +1,28 @@
-total_asset_y_min_3 = 'NULL'
-total_asset_y_min_2 = 'NULL'
-total_asset_y_min_1 = 'NULL'
-total_asset_y = 'NULL'
+import psycopg2
 
-total_assets = [1, 2, 3]
 
-try:
-    total_asset_y = total_assets[0]
-    total_asset_y_min_1 = total_assets[1]
-    total_asset_y_min_2 = total_assets[2]
-    total_asset_y_min_3 = total_assets[3]
+SCHEMA_NAME = 'public'
+TABLE_NAME = 'mst_stock'
 
-except IndexError:
-    pass
+db_conn = psycopg2.connect(
+    host='satao.db.elephantsql.com',
+    port=5432,
+    dbname='xgpbnhoy',
+    user='xgpbnhoy',
+    password='DTAm6UYROwh1iDRZstKN1hXyJlAgC7-s'
+)
 
-print(total_asset_y)
-print(total_asset_y_min_1)
-print(total_asset_y_min_2)
-print(total_asset_y_min_3)
+db_cursor = db_conn.cursor()
+
+selector_query = f'''
+    SELECT column_name
+    FROM information_schema.columns
+    WHERE table_schema = '{SCHEMA_NAME}'
+        AND table_name = '{TABLE_NAME}';
+'''
+
+db_cursor.execute(selector_query)
+
+print(tuple(map(lambda x: x[0], db_cursor.fetchall())))
+
+db_cursor.close()

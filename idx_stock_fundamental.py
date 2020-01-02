@@ -15,46 +15,37 @@ RESPONSE_INDEX_CAR = 42
 RESPONSE_INDEX_NPL = 44
 
 def ajdustUnitless(stringVal):
-    nominal = 'NULL'
-
     try:
-        nominal = str(round(float(stringVal), 2))
+        return str(round(float(stringVal), 2))
     
     except ValueError:
-        return nominal
-
-    return nominal
+        return 'NULL'
 
 def ajdustPercentage(stringVal):
-    nominal = 'NULL'
-
     try:
-        nominal = str(round(float(stringVal) / 100, 4))
+        return str(round(float(stringVal) / 100, 4))
     
     except ValueError:
-        return nominal
-
-    return nominal
+        return 'NULL'
 
 def adjustNominal(stringVal):
-    nominal = 'NULL'
-
     try:
         nominal, multiplier = stringVal.replace(',', '').split(' ')
+
+        if multiplier == 'M':
+            return str(float(nominal) * 1000000)
+        
+        elif multiplier == 'B':
+            return str(float(nominal) * 1000000000)
+
+        elif multiplier == 'T':
+            return str(float(nominal) * 1000000000000)
+
+        else:
+            return 'NULL'
     
     except ValueError:
-        return nominal     
-    
-    if multiplier == 'M':
-        return str(float(nominal) * 1000000)
-    
-    elif multiplier == 'B':
-        return str(float(nominal) * 1000000000)
-
-    elif multiplier == 'T':
-        return str(float(nominal) * 1000000000000)
-
-    return nominal
+        return stringVal.replace(',', '').split(' ')[0]
 
 
 session = requests.Session()
@@ -75,8 +66,8 @@ selector_query = f'''
     SELECT stock_code,
         stock_name
     FROM {TABLE_NAME}
-    WHERE stock_exchange_code = \'{STOCK_EXCHANGE_CODE}\'
-        AND latest_update < \'2019-11-04 14:21:06\'::timestamptz
+    WHERE stock_exchange_code = '{STOCK_EXCHANGE_CODE}'
+        AND total_asset_y_min_1 IS NULL
     ORDER BY stock_code;
 '''
 
@@ -307,6 +298,9 @@ for [stockCode, stockName] in db_cursor.fetchall():
         eps["y_min_3"] = eps_list[3]
     
     except IndexError:
+        pass
+
+    except AttributeError:
         pass
 
     # C2. Percentage-Based Values (ROE, ROA, DER, CR, QR, CRR)
