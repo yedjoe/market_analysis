@@ -1,3 +1,3 @@
-/.venv_win
-/.vscode
-*/__pycache__
+.venv_win/
+.vscode/
+**/__pycache__/
