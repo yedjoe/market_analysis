@@ -93,7 +93,6 @@ class StockMarket:
                         'kode_rc4': '',
                         'kode_rc5': '',
                         'period_opt': period_value,
-                        'stock_cb': 'on',
                         'stock_cb': 'on'
                     }
                 ) as response:
