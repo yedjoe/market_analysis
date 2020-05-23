@@ -17,14 +17,14 @@ RESPONSE_INDEX_NPL = 44
 def ajdustUnitless(stringVal):
     try:
         return str(round(float(stringVal), 2))
-    
+
     except ValueError:
         return 'NULL'
 
 def ajdustPercentage(stringVal):
     try:
         return str(round(float(stringVal) / 100, 4))
-    
+
     except ValueError:
         return 'NULL'
 
@@ -34,7 +34,7 @@ def adjustNominal(stringVal):
 
         if multiplier == 'M':
             return str(float(nominal) * 1000000)
-        
+
         elif multiplier == 'B':
             return str(float(nominal) * 1000000000)
 
@@ -43,7 +43,7 @@ def adjustNominal(stringVal):
 
         else:
             return 'NULL'
-    
+
     except ValueError:
         return stringVal.replace(',', '').split(' ')[0]
 
@@ -80,7 +80,7 @@ for [stockCode, stockName] in db_cursor.fetchall():
 
     # A. Financial Report - Annual Balance Sheet
     res = session.get(
-        'https://analytics2.rti.co.id/', 
+        'https://analytics2.rti.co.id/',
         params={
             'm_id': '1',
             'sub_m': 's2',
@@ -100,7 +100,7 @@ for [stockCode, stockName] in db_cursor.fetchall():
     params_re = re.search(f'c= \'{stockCode}\';s= \'(.+)\';p= \'(.+)\';', html_soup.find('script', string=re.compile('var _0x9654')).get_text())
 
     res = session.get(
-        'https://analytics2.rti.co.id/query_financial.jsp', 
+        'https://analytics2.rti.co.id/query_financial.jsp',
         params={
             'type': re.search('fin_req\(\"(.+)\"\)', html_soup.find('script', string=re.compile('fin_req\(\".+\"\)')).get_text()).group(1),
             'code': stockCode,
@@ -120,10 +120,10 @@ for [stockCode, stockName] in db_cursor.fetchall():
 
     total_asset_key_phrase = 'Total Assets'
     total_asset_idx = int(re.search('id=r(\d+)c', html_soup.find('td', string=total_asset_key_phrase).parent.find('script').get_text()).group(1)) - 1
-    
+
     try:
         total_asset_list = [adjustNominal(each_total_asset) for each_total_asset in res.text.split('|;')[total_asset_idx].split('|')]
-    
+
         total_asset["y"] = total_asset_list[0]
         total_asset["y_min_1"] = total_asset_list[1]
         total_asset["y_min_2"] = total_asset_list[2]
@@ -142,10 +142,10 @@ for [stockCode, stockName] in db_cursor.fetchall():
 
     total_equity_key_phrase = 'Total Stockholders\' Equity'
     total_equity_idx = int(re.search('id=r(\d+)c', html_soup.find('td', string=total_equity_key_phrase).parent.find('script').get_text()).group(1)) - 1
-    
+
     try:
         total_equity_list = [adjustNominal(each_total_equity) for each_total_equity in res.text.split('|;')[total_equity_idx].split('|')]
-    
+
         total_equity["y"] = total_equity_list[0]
         total_equity["y_min_1"] = total_equity_list[1]
         total_equity["y_min_2"] = total_equity_list[2]
@@ -173,15 +173,15 @@ for [stockCode, stockName] in db_cursor.fetchall():
         # CAR
         car_key_phrase = '(Capital Adequacy Ratio)'
         car_idx = int(re.search('id=r(\d+)c', html_soup.find('td', string=re.compile(car_key_phrase)).parent.find('script').get_text()).group(1)) - 1
-        
+
         try:
             car_list = [ajdustUnitless(each_car) for each_car in res.text.split('|;')[car_idx].split('|')]
-        
+
             car["y"] = car_list[0]
             car["y_min_1"] = car_list[1]
             car["y_min_2"] = car_list[2]
             car["y_min_3"] = car_list[3]
-        
+
         except IndexError:
             pass
 
@@ -189,15 +189,15 @@ for [stockCode, stockName] in db_cursor.fetchall():
         # NPL
         npl_key_phrase = '(Non Performing Loan)'
         npl_idx = int(re.search('id=r(\d+)c', html_soup.find('td', string=re.compile(npl_key_phrase)).parent.find('script').get_text()).group(1)) - 1
-        
+
         try:
             npl_list = [ajdustUnitless(each_npl) for each_npl in res.text.split('|;')[npl_idx].split('|')]
-        
+
             npl["y"] = npl_list[0]
             npl["y_min_1"] = npl_list[1]
             npl["y_min_2"] = npl_list[2]
             npl["y_min_3"] = npl_list[3]
-        
+
         except IndexError:
             pass
 
@@ -206,7 +206,7 @@ for [stockCode, stockName] in db_cursor.fetchall():
 
     # B. Financial Report - Annual Income Statement
     res = session.get(
-        'https://analytics2.rti.co.id/', 
+        'https://analytics2.rti.co.id/',
         params={
             'm_id': '1',
             'sub_m': 's2',
@@ -226,7 +226,7 @@ for [stockCode, stockName] in db_cursor.fetchall():
     params_re = re.search(f'c= \'{stockCode}\';s= \'(.+)\';p= \'(.+)\';', html_soup.find('script', string=re.compile('var _0x9654')).get_text())
 
     res = session.get(
-        'https://analytics2.rti.co.id/query_financial.jsp', 
+        'https://analytics2.rti.co.id/query_financial.jsp',
         params={
             'type': re.search('fin_req\(\"(.+)\"\)', html_soup.find('script', string=re.compile('fin_req\(\".+\"\)')).get_text()).group(1),
             'code': stockCode,
@@ -246,10 +246,10 @@ for [stockCode, stockName] in db_cursor.fetchall():
 
     net_income_key_phrase = 'Net Income'
     net_income_idx = int(re.search('id=r(\d+)c', html_soup.find('td', string=net_income_key_phrase).parent.find('script').get_text()).group(1)) - 1
-    
+
     try:
         net_income_list = [adjustNominal(each_net_income) for each_net_income in res.text.split('|;')[net_income_idx].split('|')]
-    
+
         net_income["y"] = net_income_list[0]
         net_income["y_min_1"] = net_income_list[1]
         net_income["y_min_2"] = net_income_list[2]
@@ -263,7 +263,7 @@ for [stockCode, stockName] in db_cursor.fetchall():
 
     # C. Profile
     res = session.get(
-        'https://analytics2.rti.co.id/', 
+        'https://analytics2.rti.co.id/',
         params={
             'm_id': '1',
             'sub_m': 's2',
@@ -287,7 +287,7 @@ for [stockCode, stockName] in db_cursor.fetchall():
     }
 
     eps_key_phrase = 'Earnings Per Share (EPS)'
-    
+
     try:
         eps_list = [ajdustUnitless(each_eps.get_text()) for each_eps in html_soup.find('div', string=eps_key_phrase).find_parent('td').find('table').find('td', string=re.compile('EPS')).find_parent('tr').find_all('td')[1:]]
         eps_list.reverse()
@@ -296,7 +296,7 @@ for [stockCode, stockName] in db_cursor.fetchall():
         eps["y_min_1"] = eps_list[1]
         eps["y_min_2"] = eps_list[2]
         eps["y_min_3"] = eps_list[3]
-    
+
     except IndexError:
         pass
 
@@ -332,7 +332,7 @@ for [stockCode, stockName] in db_cursor.fetchall():
                     .find('td', string=re.compile(percentage_based_key_phrase[key_phrase_key])).find_parent('tr').find_all('td')[1].get_text()) \
                     .group(1)
             )
-        
+
         except AttributeError:
             pass
 
@@ -357,7 +357,7 @@ for [stockCode, stockName] in db_cursor.fetchall():
                 ': (\d*\.?\d+)x',
                 html_soup.find('td', string=re.compile(unitless_based_key_phrase[key_phrase_key])).find_parent('tr').find_all('td')[1].get_text()
             ).group(1))
-        
+
         except AttributeError:
             pass
 
