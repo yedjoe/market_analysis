@@ -167,6 +167,7 @@ SELECT * FROM public."tb_mst_period";
 DROP TABLE public."tb_mst_period";
 
 SELECT * FROM public."tb_trx_stock_kpi";
+UPDATE public."tb_trx_stock_kpi" SET kpi_value = NULL WHERE upper(kpi_value) = 'NA';
 DROP TABLE public."tb_trx_stock_kpi";
 CREATE TABLE IF NOT EXISTS public."tb_trx_stock_kpi" (
     kpi_trx_sid		uuid PRIMARY KEY DEFAULT uuid_generate_v4(),
@@ -176,3 +177,25 @@ CREATE TABLE IF NOT EXISTS public."tb_trx_stock_kpi" (
     kpi_value		varchar(255),
     created_on		timestamp DEFAULT now() NOT NULL
 );
+SELECT
+	STK.stock_code,
+	PRD.period_value,
+	KPI.kpi_id,
+	CASE
+		WHEN (CFG1.config_id = 'RATIO') OR (CFG1.config_id = 'AMOUNT') THEN SKP.kpi_value::numeric
+	END AS kpi_value,
+	KPI.kpi_name
+FROM public."tb_trx_stock_kpi" SKP
+left OUTER JOIN public."tb_mst_stock" STK ON
+	SKP.stock_sid = STK.stock_sid
+left OUTER JOIN public."tb_mst_period" PRD ON
+	SKP.period_sid = PRD.period_sid
+left OUTER JOIN public."tb_mst_kpi_alias" ALS ON
+	SKP.kpi_alias_sid = ALS.kpi_alias_sid
+left OUTER JOIN public."tb_mst_kpi" KPI ON
+	ALS.kpi_sid = KPI.kpi_sid
+left OUTER JOIN public."tb_mst_config" CFG1 ON
+	KPI.value_type_sid = CFG1.config_sid
+ORDER BY 
+	STK.stock_code,
+	PRD.period_value;

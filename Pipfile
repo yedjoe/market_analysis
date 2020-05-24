@@ -1,0 +1,31 @@
+[[source]]
+name = "pypi"
+url = "https://pypi.org/simple"
+verify_ssl = true
+
+[dev-packages]
+
+[packages]
+beautifulsoup4 = "==4.8.1"
+certifi = "==2019.9.11"
+chardet = "==3.0.4"
+idna = "==2.8"
+jdcal = "==1.4.1"
+numpy = "==1.17.3"
+openpyxl = "==3.0.0"
+pandas = "==0.25.2"
+psycopg2 = "==2.8.4"
+python-dateutil = "==2.8.0"
+pytz = "==2019.3"
+requests = "==2.22.0"
+six = "==1.12.0"
+soupsieve = "==1.9.4"
+urllib3 = "==1.25.6"
+et_xmlfile = "==1.0.1"
+fake-headers = "*"
+sqlalchemy = "*"
+pylint = "*"
+pexpect = "*"
+
+[requires]
+python_version = "3.8"

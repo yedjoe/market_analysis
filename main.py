@@ -1,14 +1,7 @@
-# from func.psql import PSQL
-from func.stock_market import StockMarket
-
+from controller.console import Console
 
 def main():
-    # psql = PSQL()
-    # psql.fn_exporter()
-
-    sm = StockMarket()
-    sm.update_idx_rti_analytics_stock_kpi()
-
+    Console()
 
 if __name__ == '__main__':
     main()

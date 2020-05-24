@@ -12,7 +12,11 @@ AS $function$
 		var_stock_exchange_id	varchar(255) := 'IDX';
 	BEGIN
 		RETURN QUERY
-		SELECT
+		SELECT DISTINCT ON
+			(
+				STK.stock_code,
+				PRD.period_value
+			)
 			STK.stock_sid,
 			STK.stock_code,
 			PRD.period_sid,
@@ -23,26 +27,11 @@ AS $function$
 		left OUTER JOIN public."tb_trx_stock_kpi" SKP ON
 			STK.stock_sid = SKP.stock_sid
 			AND PRD.period_sid = SKP.period_sid
-		WHERE STK.stock_exchange_sid = (SELECT public."fn_get_config_sid"(var_config_category_id, var_stock_exchange_id))
-			AND SKP.kpi_value IS NULL
+		WHERE
+			STK.stock_exchange_sid = (SELECT public."fn_get_config_sid"(var_config_category_id, var_stock_exchange_id))
+			AND SKP.kpi_trx_sid IS NULL
 		ORDER BY
 			STK.stock_code,
-			PRD.period_date;
-
---		SELECT DISTINCT ON
---			(
---				STK.stock_code,
---				PRD.period_value
---			)
---			STK.stock_code,
---			PRD.period_value
---		FROM public."tb_trx_stock_kpi" SKP
---		left OUTER JOIN public."tb_mst_stock" STK ON
---			SKP.stock_sid = STK.stock_sid
---		left OUTER JOIN public."tb_mst_period" PRD ON
---			SKP.period_sid = PRD.period_sid
---		ORDER BY 
---			STK.stock_code,
---			PRD.period_value;
+			PRD.period_value;
 	END;
 $function$;

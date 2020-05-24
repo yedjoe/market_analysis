@@ -2,34 +2,37 @@ from json import dumps
 # from operator import itemgetter
 # from random import random
 # from re import compile as re_compile, IGNORECASE, Match, search
+from random import randint
+from time import sleep
 from typing import Any, Callable, Dict, List
 from uuid import UUID
 
 from bs4 import BeautifulSoup
+from fake_headers import Headers
 # from numpy import nan
 # from pandas import DataFrame, read_html
 from requests import Session
 from requests.adapters import HTTPAdapter
+from requests.exceptions import ConnectionError
 from sqlalchemy import create_engine
 from sqlalchemy.engine import Engine
 from sqlalchemy.sql import text
 
+from config import DB_URL
 
-# Variable
-DB_URL: str = 'postgresql+psycopg2://market_analysis:market_analysis@localhost:5432/db_market_analysis'
 
-class StockMarket:
+class StockScraper:
     __db_engine: Engine = create_engine(DB_URL)
+    __headers: Headers = Headers(headers=True)
     __session: Session = Session()
 
     def __init__(self):
-        self.__session.headers.update({
-            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/81.0.4044.138 Safari/537.36'
-        })
-        self.__session.mount('http://', HTTPAdapter(max_retries=200))
-        self.__session.mount('https://', HTTPAdapter(max_retries=200))
+        self.__session.mount('http://', HTTPAdapter(max_retries=999))
+        self.__session.mount('https://', HTTPAdapter(max_retries=999))
 
     def __get_idx_stocks(self, start: int=0, length: int=100) -> List[Dict[str, Any]]:
+        self.__session.headers.update(self.__headers.generate())
+
         with self.__session.get(
             'https://www.idx.co.id/umbraco/Surface/StockData/GetSecuritiesStock',
             params={ 'start': start * length, 'length': length }
@@ -52,6 +55,8 @@ class StockMarket:
                     i += 1
 
     def __update_rti_analytics_period(self) -> None:
+        self.__session.headers.update(self.__headers.generate())
+
         with self.__session.get(
             'https://analytics2.rti.co.id/',
             params={ 'm_id': '1', 'sub_m': 's55' }
@@ -82,21 +87,34 @@ class StockMarket:
             for stock_sid, stock_code, period_sid, period_value in db_con.execute('SELECT * FROM public."fn_get_idx_rti_analytics_stock_period"()').fetchall():
                 print('{stock_code} on {period_value}'.format(stock_code=stock_code, period_value=period_value))
 
-                with self.__session.post(
-                    'https://analytics2.rti.co.id/',
-                    params={ 'm_id': '1', 'sub_m': 's55' },
-                    data={
-                        'comp_code': '',
-                        'kode_rc1': stock_code,
-                        'kode_rc2': '',
-                        'kode_rc3': '',
-                        'kode_rc4': '',
-                        'kode_rc5': '',
-                        'period_opt': period_value,
-                        'stock_cb': 'on'
-                    }
-                ) as response:
-                    finrat_html_soup: BeautifulSoup = BeautifulSoup(response.text, 'html.parser')
+                finrat_html_soup: BeautifulSoup
+
+                while True:
+                    try:
+                        sleep(randint(1, 10))
+
+                        self.__session.headers.update(self.__headers.generate())
+
+                        finrat_html_soup = BeautifulSoup(self.__session.post(
+                            'https://analytics2.rti.co.id/',
+                            params={ 'm_id': '1', 'sub_m': 's55' },
+                            data={
+                                'comp_code': '',
+                                'kode_rc1': stock_code,
+                                'kode_rc2': '',
+                                'kode_rc3': '',
+                                'kode_rc4': '',
+                                'kode_rc5': '',
+                                'period_opt': period_value,
+                                'stock_cb': 'on'
+                            }
+                        ).text, 'html.parser')
+
+                    except ConnectionError:
+                        pass
+
+                    else:
+                        break
 
                 get_text: Callable = lambda tags: map(lambda tag: tag.find('div').getText().strip(), tags)
 
@@ -113,6 +131,8 @@ class StockMarket:
                             'kpi_values': list(values)
                         }
                     )
+
+
 
     #             # A. Annual Balance Sheet (ABS)
     #             with session.get(
